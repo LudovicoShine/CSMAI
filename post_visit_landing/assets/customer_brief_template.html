@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>客户简报 - {customer_name} - {date}</title>
+<style>
+  :root {
+    --fr-primary: #1A6FE8;
+    --fr-primary-dark: #0F4FB8;
+    --fr-bg-soft: #F5F7FA;
+    --fr-border: #D4DEED;
+    --fr-text: #1F2937;
+    --fr-text-sub: #6B7280;
+  }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--fr-text);
+    line-height: 1.7;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px;
+    background: #fff;
+  }
+  .fr-header {
+    border-left: 4px solid var(--fr-primary);
+    padding: 10px 16px;
+    background: linear-gradient(90deg, #E8EEF7 0%, #fff 100%);
+    margin-bottom: 24px;
+  }
+  .fr-header .title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--fr-primary-dark);
+    margin: 0;
+  }
+  .fr-header .subtitle {
+    font-size: 13px;
+    color: var(--fr-text-sub);
+    margin-top: 6px;
+  }
+  .fr-section {
+    margin-bottom: 28px;
+    page-break-inside: avoid;
+  }
+  .fr-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--fr-primary);
+    border-bottom: 2px solid #E8EEF7;
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+  }
+  .fr-summary {
+    background: var(--fr-bg-soft);
+    border-left: 4px solid var(--fr-primary);
+    padding: 16px;
+    font-size: 15px;
+  }
+  .fr-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .fr-table th {
+    background: var(--fr-primary);
+    color: #fff;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 500;
+  }
+  .fr-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--fr-border);
+  }
+  .fr-table tr:nth-child(even) td {
+    background: var(--fr-bg-soft);
+  }
+  .fr-next-step {
+    background: #fff;
+    border: 1px solid var(--fr-border);
+    padding: 14px 16px;
+  }
+  .fr-footer {
+    margin-top: 36px;
+    padding-top: 16px;
+    border-top: 1px solid var(--fr-border);
+    font-size: 12px;
+    color: var(--fr-text-sub);
+    text-align: center;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 14mm 12mm;
+  }
+  @media print {
+    body {
+      max-width: none;
+      padding: 0;
+      color: #000;
+      background: #fff;
+    }
+    .fr-header,
+    .fr-summary,
+    .fr-next-step {
+      background: #fff !important;
+      color: #000 !important;
+      border-color: #666 !important;
+    }
+    .fr-header .title,
+    .fr-section-title {
+      color: #000 !important;
+    }
+    .fr-table th {
+      background: #e5e5e5 !important;
+      color: #000 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .fr-table tr:nth-child(even) td {
+      background: #fff !important;
+    }
+    .fr-section,
+    .fr-header,
+    .fr-footer {
+      page-break-inside: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="fr-header">
+  <div class="title">客户简报</div>
+  <div class="subtitle">客户：{customer_name} ｜ 日期：{date} ｜ 主题：{brief_topic}</div>
+</div>
+
+<div class="fr-section">
+  <div class="fr-section-title">一句话总结</div>
+  <div class="fr-summary">{customer_summary}</div>
+</div>
+
+<div class="fr-section">
+  <div class="fr-section-title">推荐场景一页纸</div>
+  <table class="fr-table">
+    <thead>
+      <tr>
+        <th>场景</th>
+        <th>一句话描述</th>
+        <th>预期价值</th>
+        <th>建议交付时间</th>
+      </tr>
+    </thead>
+    <tbody>{scene_rows}</tbody>
+  </table>
+</div>
+
+<div class="fr-section">
+  <div class="fr-section-title">需要客户配合的事项</div>
+  <table class="fr-table">
+    <thead>
+      <tr>
+        <th>配合项</th>
+        <th>目的</th>
+        <th>负责人</th>
+        <th>时间</th>
+      </tr>
+    </thead>
+    <tbody>{coordination_rows}</tbody>
+  </table>
+</div>
+
+<div class="fr-section">
+  <div class="fr-section-title">下一步安排</div>
+  <div class="fr-next-step">{next_steps}</div>
+</div>
+
+<div class="fr-footer">
+  本简报仅保留客户可见信息 ｜ 生成时间：{timestamp} ｜ 文档编号：BRIEF-{customer_abbr}-{datecompact}
+</div>
+
+</body>
+</html>

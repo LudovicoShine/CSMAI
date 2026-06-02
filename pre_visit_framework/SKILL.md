@@ -1,184 +1,92 @@
 ---
 name: pre-visit-framework
-description: 帆软 CSM 拜访前调研框架与场景生成器。基于客户名称、行业、拜访部门、既有 BI 使用情况和本次拜访契机，结合公开资料判断客户业务阶段，输出 6 个精准主场景（可选 3 个补充场景）、完整版现场引导问题、场景地图与推进建议。当 CSM 接到拜访任务后需要准备入场谈资时触发，包括：新客户首次拜访、老客户新部门破圈、既有场景深化、数据问题与业务场景并行摸底。触发词：拜访前、客户背景、访前准备、调研框架、破圈切入、场景设计。
-when_to_use: CSM 在拜访客户前需要准备访谈框架与场景设计时使用
-allowed-tools: Read, Grep, Write, WebSearch
-version: v7
+description: 为帆软 CSM 生成拜访前调研框架、主场景清单、现场追问、钩子词雷达与推进建议。适用于新客户首次拜访、老客户新部门破圈、既有场景深化、数据问题与业务场景并行摸底；输入客户名称、行业、拜访部门、拜访背景后，输出 6 个精准主场景，可选 3 个补充场景，并结合可索引场景库与钩子词库提高复用质量。
+metadata:
+  short-description: 帆软 CSM 拜访前调研与场景生成
 ---
 
-# Pre-Visit Framework｜拜访前调研框架与场景生成
+# Pre-Visit Framework
 
-## 角色定义
+用于 CSM 在拜访前准备客户背景判断、访谈框架、场景设计与首轮推进建议。
 
-你是一名帆软 BI 产品客户成功（CSM）领域的**场景设计专家**。你的核心能力是：基于客户名称、行业、拜访部门、既有 BI 使用情况和本次拜访契机，结合公开资料与输入信息，判断客户公司和部门当前所处的业务阶段，再输出**围绕本次拜访目标**的场景清单、完整版现场引导问题、场景地图与推进建议。
+## 何时使用
 
-你的输出不是通用行业模板，而是**围绕这次拜访要解决的问题**来设计。
+- 用户要做访前准备、客户背景梳理、部门破圈切入、场景设计
+- 需要基于客户名称、行业、部门、既有 BI 使用情况生成 6 个主场景
+- 需要根据客户原话快速识别切入点，或参考历史行业/部门场景模板
 
----
+## 输入要求
 
-## 核心原则
+### 必填
 
-1. **先判断信息是否足够**：若关键信息缺失，先返回补齐问卷（见下方），不要硬写场景
-2. **先搜公开资料，再做判断**：如果 `customer_name` 明确，优先把公开资料判断融入客户与部门分析；搜不到再标注"基于行业推测"
-3. **先理解客户，再给场景**：必须先写客户公司与部门的业务情况判断，再给场景
-4. **贴着用户输入走**：6 个主场景必须紧扣 `visit_context` 与 `visit_goal`，不能泛化
-5. **场景标题必须明确**：每个场景一眼看懂在解决什么问题；场景描述必须写清背景 / 价值 / 为什么值得做 / 为什么现在做
-6. **场景内融合看板内容**：不再单独输出看板模块，而是把看板目标 / 页面结构 / 关键图层 / 故事链融进每个场景的"与产品的相关性"字段
-7. **允许双线输出**：若同时涉及业务部门场景与数据治理问题，输出 6 主场景 + 3 补充场景
-8. **术语统一**："风险与痛点"、"切入点提示"（不用"风险评估""机会点"）
-9. **场景地图必须画得像地图**：业务域 × 角色层级 × BI 落点三层结构
+- `customer_industry`
+- `visit_target_dept`
+- `visit_context`
 
----
+### 建议补充
 
-## 输入 schema
+- `customer_name`
+- `visit_goal`
+- `customer_scale`
+- `customer_bi_status`
+- `visit_target_role`
+- `visit_target_name`
+- `known_pain_points`
+- `known_boards`
+- `known_communication_log`
 
-### 必填字段
-- `customer_industry`：客户所属行业
-- `visit_target_dept`：本次拜访部门（可多部门，如"运营部门 + IT部门"）
-- `visit_context`：本次拜访的背景与契机
+### 信息不完整时
 
-### 可选字段（建议尽量补齐，越全输出越精准）
-- `customer_name`、`visit_goal`、`customer_scale`
-- `customer_bi_status`：现有 BI 使用情况（哪些产品、用了多久、用得如何）
-- `visit_target_role`、`visit_target_name`
-- `customer_intro_guess`、`dept_intro_guess`
-- `target_pain_point_guess`、`target_leader_demand_guess`、`target_recent_deliverable_guess`
-- `known_pain_points`、`known_boards`、`known_communication_log`
-- `competition_or_alternative`、`csm_persona`
+若只提供必填三项，且缺少角色、目标、痛点信息，先返回补齐问卷，不直接生成场景。问卷字段见 [references/interview_questions.md](references/interview_questions.md) 中的输入提醒部分。
 
-### 信息完整性规则
-- 只提供 3 个必填字段、且缺少"以人为本"信息（角色、目标、痛点）→ 先返回**补齐问卷**
-- 可选字段为空 → 输出中显式写"未填 / 需确认"，并在开头反问关键空缺
-- 未填 `visit_goal` → 先问："本次最想解决的是业务场景、数据问题还是两者并行？"
-- `customer_name` 明确但公司信息不足 → 优先通过公开资料补齐背景判断
+## 执行流程
 
-### 信息不全时的补齐问卷模板
+1. 先检查信息是否足够，不足则返回补齐问卷。
+2. 若 `customer_name` 明确，优先结合公开资料判断客户业务与拜访部门职责；无法确认时明确标注“基于行业推测”。
+3. 先判断这是“业务场景挖掘”“数据问题治理”还是“双线并行”，再决定是否输出补充场景。
+4. 优先从可复用知识库召回行业/部门交叉场景，再根据本次 `visit_context` 与 `visit_goal` 做裁剪，不要从零空想。
+5. 逐个输出主场景表，并把看板目标、页面结构、故事链、产品分层写进“与产品的相关性”字段。
+6. 生成完整版现场引导问题、钩子指标雷达、推进建议表（预测）与场景地图。
+7. 生成完成后，必须按 [references/quality_checklist.md](references/quality_checklist.md) 逐条自检；若任一关键项不满足，先修正再输出。
 
-| 需要补充的内容 | 请补充什么 |
-|---|---|
-| 客户名称 | 例如：中建政研集团 |
-| 客户业务介绍 | 你对客户公司主营业务、组织特点的理解 |
-| 部门介绍 | 该部门主要职责、汇报对象、日常动作 |
-| 拜访目标 | 这次想解决什么 |
-| 现有 BI 情况 | 已有看板/使用情况/使用意愿 |
-| 已知痛点 | 现在最卡的点是什么 |
-| 已知场景 | 目前已经在用哪些场景 |
-| 竞争/替代系统 | 是否有其他 BI / 报表系统 |
+## 输出要求
 
----
+按以下顺序输出：
 
-## 生成流程（强制按序执行）
-
-### Step 1 · 信息检查
-- 若信息不完整 → 返回补齐问卷，结束
-- 若信息完整 → 进入 Step 2
-
-### Step 2 · 客户与部门业务情况判断
-结合公开资料与输入信息，判断客户公司和部门当前业务阶段。能搜到可信资料就融入；搜不到就标注"以下判断基于行业推测"。
-
-输出必须包含：
-1. 客户公司业务介绍
-2. 拜访部门业务介绍
-3. 本次拜访判断：业务场景挖掘 / 数据问题治理 / 双线并行
-4. 已知信息
-5. 基于公开资料或行业特征的判断
-6. 合理推测
-
-### Step 3 · 场景生成策略
-- 默认输出 **6 个主场景**
-- 若用户同时提出"数据问题要解决"+"业务部门场景也要补充" → 额外输出 **3 个补充贴切场景**
-
-### Step 4 · 逐场景生成
-每个场景必须用表格输出，包含 10 个字段，详见 [references/scene_table_schema.md](references/scene_table_schema.md)。
-
-要点：
-- 场景描述必须写清楚背景 / 价值 / 为什么值得做 / 为什么现在做
-- 分析指标不能只列名称，必要时补一句解释
-- "与产品的相关性"必须融合：看板目标、页面核心结构、关键图层、故事链，以及对应到的帆软产品层（FDL/FineBI/FineReport/简道云/Dora）
-
-### Step 5 · 总调研框架
-输出**完整版现场引导问题清单**（不是方法论摘要），按"基础信息确认 → 现状与痛点确认 → 场景与指标确认 → 推进与协同确认"四阶段组织。
-
-每个问题必须写出：调研目的 / 追问方向 / 适用干系人。不同干系人（高层、部门负责人、执行人、IT/数据负责人）的问法要不同。
-
-详细 schema 与示例见 [references/interview_questions.md](references/interview_questions.md)。
-
-### Step 6 · 钩子指标雷达（增量模块）
-基于行业与部门，提示 CSM 在现场要竖起耳朵抓的"钩子词"：客户一旦说出这些词 = 命中切入点。表格列：指标名 / 客户说什么词 = 命中 / 业务含义 / 对应主场景编号。
-
-### Step 7 · 推进建议表（预测）
-以"阶段 / 主要做什么 / 解决什么痛点 / 关键实施方案 / 预期产出"输出，标题中明确"预测"。
-
-### Step 8 · 场景地图
-三层结构：业务域 × 角色层级地图 → BI 建设落点图 → 场景优先级建议。详见 [references/scene_map_schema.md](references/scene_map_schema.md)。
-
----
-
-## 输出 schema（按以下顺序输出）
-
-```
+```text
 0. 开头目录
 1. 客户与部门业务情况介绍和推测
 2. 拜访基本信息摘要（30 字内）
 3. 总调研框架
-   3.1 本次调研总目标
-   3.2 调研方法论
-   3.3 六大调研维度
-   3.4 完整版现场引导问题框架（4 阶段，表格输出）
-   3.5 干系人调研判断提醒
-4. 6 个精准主场景（每个场景一张表）
-5. 3 个补充贴切场景（仅在数据问题+业务场景并存时输出）
-6. 钩子指标雷达（表格）
+4. 6 个精准主场景
+5. 3 个补充贴切场景（仅在双线并行时输出）
+6. 钩子指标雷达
 7. 推进建议表（预测）
 8. 场景地图
-   8.1 业务域 × 角色层级地图
-   8.2 BI 建设落点图
-   8.3 场景优先级建议
 ```
 
----
+### 硬性约束
 
-## 帆软产品分层提示（在场景的"与产品的相关性"中调用）
+- 6 个主场景必须贴着 `visit_context` 与 `visit_goal`
+- 假设必须可证伪，并显式写“需客户确认”
+- 数据治理场景不能孤立存在，必须绑定具体业务场景
+- 默认 Markdown 表格输出；需要富文本时可参考 [assets/output_template.html](assets/output_template.html)
+- 若用户需要打印、转 PDF、复制到飞书或钉钉，优先使用 print 样式或 [assets/markdown_only_template.md](assets/markdown_only_template.md)
 
-| 产品层 | 适用场景 | 在场景中如何写 |
-|---|---|---|
-| **FineDataLink (FDL)** | 多源数据接入、ERP/WMS/CRM 同步、宽表构建、口径治理 | "FDL 重点：统一 XXX 字段、XXX 状态、XXX 映射规则" |
-| **FineBI** | 经营驾驶舱、自助分析、指标趋势、钻取预警 | "BI 目标：让 XX 角色在 X 分钟判断 XX；页面核心结构…故事链…" |
-| **FineReport (FR)** | 中国式复杂报表、固定格式日/月报、填报采集、打印导出 | "FR 用于：标准化材料模板 / 定期填报 / 打印导出场景" |
-| **简道云** | 业务数据采集、轻流程审批、移动端填报与协同 | "简道云用于：替代 Excel 填报 / 跨部门轻协同 / 移动汇报入口" |
-| **Dora（Data Agent）** | 智能问数、异常预警、报告摘要、例行任务数字员工 | "Dora 用于：自然语言问数 / 自动异常推送 / 定期报告生成" |
+## 参考资料导航
 
-详细产品分层判断标准见 [references/product_layers.md](references/product_layers.md)。
+按需读取，不要一次性全加载：
 
----
+- 场景表字段定义：[references/scene_table_schema.md](references/scene_table_schema.md)
+- 场景地图结构：[references/scene_map_schema.md](references/scene_map_schema.md)
+- 现场引导问题框架：[references/interview_questions.md](references/interview_questions.md)
+- 产品分层判断：[references/product_layers.md](references/product_layers.md)
+- 跨域破圈识别：[references/cross_domain.md](references/cross_domain.md)
+- 行业 × 部门场景库：[references/scene_library.md](references/scene_library.md)
+- 钩子词与追问词库：[references/hook_keywords.md](references/hook_keywords.md)
+- 输出自检清单：[references/quality_checklist.md](references/quality_checklist.md)
 
-## 跨域破圈识别（增强提示）
+## 示例
 
-CSM 的核心价值是发现部门间的数据/业务断点并串联：
-
-```
-销售预测偏差 → 供应链库存积压 → 财务现金流压力 → HR用工计划调整
-```
-
-完整连接模式（含识别词、关联指标、典型案例）见 [references/cross_domain.md](references/cross_domain.md)。
-
----
-
-## 输出约束
-
-- 基于有限背景做出合理假设，标注"需客户确认"
-- 假设必须**可证伪**，不写废话
-- 每个看板建议必须包含核心指标和计算口径
-- 默认 Markdown 表格输出；如需富文本渲染，引用 [assets/output_template.html](assets/output_template.html)
-
----
-
-## 附加资源
-
-- **场景表 schema**：[references/scene_table_schema.md](references/scene_table_schema.md)
-- **场景地图 schema**：[references/scene_map_schema.md](references/scene_map_schema.md)
-- **完整引导问题库**：[references/interview_questions.md](references/interview_questions.md)
-- **帆软产品分层判断**：[references/product_layers.md](references/product_layers.md)
-- **跨域破圈连接模式**：[references/cross_domain.md](references/cross_domain.md)
-- **HTML 输出模板**（可选渲染）：[assets/output_template.html](assets/output_template.html)
-- **端到端示例**：[examples/中建政研集团-示例输出.md](examples/中建政研集团-示例输出.md)
+- Pre-Visit 端到端示例：[examples/中建政研集团-示例输出.md](examples/中建政研集团-示例输出.md)
+- 对应 Post-Visit 闭环示例：[`../post_visit_landing/examples/中建政研集团-示例输出.md`](../post_visit_landing/examples/中建政研集团-示例输出.md)
