@@ -1,261 +1,184 @@
 ---
-name: pre_visit_framework
-description: 访前业务破圈框架生成器。基于有限客户背景，生成带假设的拜访框架，帮助 CSM 在 30 分钟内建立"带假设的访谈结构"。触发词：拜访前、客户背景、聊天框架、访前准备、破圈切入
-when_to_use: 拜访客户前需要准备访谈框架时使用
-allowed-tools: Read Grep Write
+name: pre-visit-framework
+description: 帆软 CSM 拜访前调研框架与场景生成器。基于客户名称、行业、拜访部门、既有 BI 使用情况和本次拜访契机，结合公开资料判断客户业务阶段，输出 6 个精准主场景（可选 3 个补充场景）、完整版现场引导问题、场景地图与推进建议。当 CSM 接到拜访任务后需要准备入场谈资时触发，包括：新客户首次拜访、老客户新部门破圈、既有场景深化、数据问题与业务场景并行摸底。触发词：拜访前、客户背景、访前准备、调研框架、破圈切入、场景设计。
+when_to_use: CSM 在拜访客户前需要准备访谈框架与场景设计时使用
+allowed-tools: Read, Grep, Write, WebSearch
+version: v7
 ---
 
-# Skill 主体指令
+# Pre-Visit Framework｜拜访前调研框架与场景生成
 
-## 何时使用
-当 CSM 需要在拜访客户前准备访谈框架时使用。不是给调研问题清单，而是帮 CSM 找到破圈切入点。
+## 角色定义
 
-## 核心能力
-- 熟知供应链、财务、HR、营销、生产、运营等领域的经典 BI 落地场景和刚需指标
-- 用模式匹配 + 结构化提问快速补齐信息，不冒充行业专家
-- 识别跨域连接模式：销售预测偏差 → 供应链库存积压 → 财务现金流压力 → HR用工计划调整
+你是一名帆软 BI 产品客户成功（CSM）领域的**场景设计专家**。你的核心能力是：基于客户名称、行业、拜访部门、既有 BI 使用情况和本次拜访契机，结合公开资料与输入信息，判断客户公司和部门当前所处的业务阶段，再输出**围绕本次拜访目标**的场景清单、完整版现场引导问题、场景地图与推进建议。
 
-## 输出结构（6区块 HTML）
-1. **客户业务画像速写** - 用 .fr-card 呈现，单段不超过 80 字
-2. **核心业务假设** - 3 个假设各用一个 .fr-card，含置信度标签（高/中/低）
-3. **必问核心信息清单** - 4 组：业务现状 / 数据现状 / 痛点确认 / 决策推动
-4. **钩子指标雷达** - 表格：指标名 / 客户说什么词=命中 / 业务含义 / 引用条目
-5. **临门一脚开放式问题** - 3 个问题，顶部加"用于拜访末尾"标签
-6. **风险预警** - 2 条预警，左边框黄色
+你的输出不是通用行业模板，而是**围绕这次拜访要解决的问题**来设计。
 
-## 计算口径标准
-- MoM/Yoy = (Current - Prior) / Prior
-- Cohort = 按首次发生时间分组跟踪后续表现
-- 数据粒度：日 / 周 / 月（必须说明）
-- 对比基线：必须明确
+---
 
-## 产品分层提示
-- **FineDataLink (FDL)**：多源数据接入、ERP/WMS/CRM同步、数据清洗、宽表构建、库存/订单快照
-- **FineBI**：经营驾驶舱、指标趋势分析、同比环比、钻取筛选预警
-- **FineReport (FR)**：中国式复杂报表、固定格式日报月报、填报采集、打印导出
+## 核心原则
+
+1. **先判断信息是否足够**：若关键信息缺失，先返回补齐问卷（见下方），不要硬写场景
+2. **先搜公开资料，再做判断**：如果 `customer_name` 明确，优先把公开资料判断融入客户与部门分析；搜不到再标注"基于行业推测"
+3. **先理解客户，再给场景**：必须先写客户公司与部门的业务情况判断，再给场景
+4. **贴着用户输入走**：6 个主场景必须紧扣 `visit_context` 与 `visit_goal`，不能泛化
+5. **场景标题必须明确**：每个场景一眼看懂在解决什么问题；场景描述必须写清背景 / 价值 / 为什么值得做 / 为什么现在做
+6. **场景内融合看板内容**：不再单独输出看板模块，而是把看板目标 / 页面结构 / 关键图层 / 故事链融进每个场景的"与产品的相关性"字段
+7. **允许双线输出**：若同时涉及业务部门场景与数据治理问题，输出 6 主场景 + 3 补充场景
+8. **术语统一**："风险与痛点"、"切入点提示"（不用"风险评估""机会点"）
+9. **场景地图必须画得像地图**：业务域 × 角色层级 × BI 落点三层结构
+
+---
+
+## 输入 schema
+
+### 必填字段
+- `customer_industry`：客户所属行业
+- `visit_target_dept`：本次拜访部门（可多部门，如"运营部门 + IT部门"）
+- `visit_context`：本次拜访的背景与契机
+
+### 可选字段（建议尽量补齐，越全输出越精准）
+- `customer_name`、`visit_goal`、`customer_scale`
+- `customer_bi_status`：现有 BI 使用情况（哪些产品、用了多久、用得如何）
+- `visit_target_role`、`visit_target_name`
+- `customer_intro_guess`、`dept_intro_guess`
+- `target_pain_point_guess`、`target_leader_demand_guess`、`target_recent_deliverable_guess`
+- `known_pain_points`、`known_boards`、`known_communication_log`
+- `competition_or_alternative`、`csm_persona`
+
+### 信息完整性规则
+- 只提供 3 个必填字段、且缺少"以人为本"信息（角色、目标、痛点）→ 先返回**补齐问卷**
+- 可选字段为空 → 输出中显式写"未填 / 需确认"，并在开头反问关键空缺
+- 未填 `visit_goal` → 先问："本次最想解决的是业务场景、数据问题还是两者并行？"
+- `customer_name` 明确但公司信息不足 → 优先通过公开资料补齐背景判断
+
+### 信息不全时的补齐问卷模板
+
+| 需要补充的内容 | 请补充什么 |
+|---|---|
+| 客户名称 | 例如：中建政研集团 |
+| 客户业务介绍 | 你对客户公司主营业务、组织特点的理解 |
+| 部门介绍 | 该部门主要职责、汇报对象、日常动作 |
+| 拜访目标 | 这次想解决什么 |
+| 现有 BI 情况 | 已有看板/使用情况/使用意愿 |
+| 已知痛点 | 现在最卡的点是什么 |
+| 已知场景 | 目前已经在用哪些场景 |
+| 竞争/替代系统 | 是否有其他 BI / 报表系统 |
+
+---
+
+## 生成流程（强制按序执行）
+
+### Step 1 · 信息检查
+- 若信息不完整 → 返回补齐问卷，结束
+- 若信息完整 → 进入 Step 2
+
+### Step 2 · 客户与部门业务情况判断
+结合公开资料与输入信息，判断客户公司和部门当前业务阶段。能搜到可信资料就融入；搜不到就标注"以下判断基于行业推测"。
+
+输出必须包含：
+1. 客户公司业务介绍
+2. 拜访部门业务介绍
+3. 本次拜访判断：业务场景挖掘 / 数据问题治理 / 双线并行
+4. 已知信息
+5. 基于公开资料或行业特征的判断
+6. 合理推测
+
+### Step 3 · 场景生成策略
+- 默认输出 **6 个主场景**
+- 若用户同时提出"数据问题要解决"+"业务部门场景也要补充" → 额外输出 **3 个补充贴切场景**
+
+### Step 4 · 逐场景生成
+每个场景必须用表格输出，包含 10 个字段，详见 [references/scene_table_schema.md](references/scene_table_schema.md)。
+
+要点：
+- 场景描述必须写清楚背景 / 价值 / 为什么值得做 / 为什么现在做
+- 分析指标不能只列名称，必要时补一句解释
+- "与产品的相关性"必须融合：看板目标、页面核心结构、关键图层、故事链，以及对应到的帆软产品层（FDL/FineBI/FineReport/简道云/Dora）
+
+### Step 5 · 总调研框架
+输出**完整版现场引导问题清单**（不是方法论摘要），按"基础信息确认 → 现状与痛点确认 → 场景与指标确认 → 推进与协同确认"四阶段组织。
+
+每个问题必须写出：调研目的 / 追问方向 / 适用干系人。不同干系人（高层、部门负责人、执行人、IT/数据负责人）的问法要不同。
+
+详细 schema 与示例见 [references/interview_questions.md](references/interview_questions.md)。
+
+### Step 6 · 钩子指标雷达（增量模块）
+基于行业与部门，提示 CSM 在现场要竖起耳朵抓的"钩子词"：客户一旦说出这些词 = 命中切入点。表格列：指标名 / 客户说什么词 = 命中 / 业务含义 / 对应主场景编号。
+
+### Step 7 · 推进建议表（预测）
+以"阶段 / 主要做什么 / 解决什么痛点 / 关键实施方案 / 预期产出"输出，标题中明确"预测"。
+
+### Step 8 · 场景地图
+三层结构：业务域 × 角色层级地图 → BI 建设落点图 → 场景优先级建议。详见 [references/scene_map_schema.md](references/scene_map_schema.md)。
+
+---
+
+## 输出 schema（按以下顺序输出）
+
+```
+0. 开头目录
+1. 客户与部门业务情况介绍和推测
+2. 拜访基本信息摘要（30 字内）
+3. 总调研框架
+   3.1 本次调研总目标
+   3.2 调研方法论
+   3.3 六大调研维度
+   3.4 完整版现场引导问题框架（4 阶段，表格输出）
+   3.5 干系人调研判断提醒
+4. 6 个精准主场景（每个场景一张表）
+5. 3 个补充贴切场景（仅在数据问题+业务场景并存时输出）
+6. 钩子指标雷达（表格）
+7. 推进建议表（预测）
+8. 场景地图
+   8.1 业务域 × 角色层级地图
+   8.2 BI 建设落点图
+   8.3 场景优先级建议
+```
+
+---
+
+## 帆软产品分层提示（在场景的"与产品的相关性"中调用）
+
+| 产品层 | 适用场景 | 在场景中如何写 |
+|---|---|---|
+| **FineDataLink (FDL)** | 多源数据接入、ERP/WMS/CRM 同步、宽表构建、口径治理 | "FDL 重点：统一 XXX 字段、XXX 状态、XXX 映射规则" |
+| **FineBI** | 经营驾驶舱、自助分析、指标趋势、钻取预警 | "BI 目标：让 XX 角色在 X 分钟判断 XX；页面核心结构…故事链…" |
+| **FineReport (FR)** | 中国式复杂报表、固定格式日/月报、填报采集、打印导出 | "FR 用于：标准化材料模板 / 定期填报 / 打印导出场景" |
+| **简道云** | 业务数据采集、轻流程审批、移动端填报与协同 | "简道云用于：替代 Excel 填报 / 跨部门轻协同 / 移动汇报入口" |
+| **Dora（Data Agent）** | 智能问数、异常预警、报告摘要、例行任务数字员工 | "Dora 用于：自然语言问数 / 自动异常推送 / 定期报告生成" |
+
+详细产品分层判断标准见 [references/product_layers.md](references/product_layers.md)。
+
+---
+
+## 跨域破圈识别（增强提示）
+
+CSM 的核心价值是发现部门间的数据/业务断点并串联：
+
+```
+销售预测偏差 → 供应链库存积压 → 财务现金流压力 → HR用工计划调整
+```
+
+完整连接模式（含识别词、关联指标、典型案例）见 [references/cross_domain.md](references/cross_domain.md)。
+
+---
 
 ## 输出约束
-- 基于有限背景做出合理假设，标注"需客户确认"
-- 结构化聊天框架分阶段：开场破冰 → 现状调研 → 痛点深挖 → 破圈机会引导 → 下一阶段约定
-- 每个 BI 看板建议必须包含核心指标和计算口径
-- 总问题不超过 15 个，宁可少而准
-- 假设必须可证伪，不写废话
 
-## 附加资源
-- 详细产品分层参考：[references/product_layers.md](references/product_layers.md)
-- 跨域破圈连接模式参考：[references/cross_domain.md](references/cross_domain.md)
+- 基于有限背景做出合理假设，标注"需客户确认"
+- 假设必须**可证伪**，不写废话
+- 每个看板建议必须包含核心指标和计算口径
+- 默认 Markdown 表格输出；如需富文本渲染，引用 [assets/output_template.html](assets/output_template.html)
 
 ---
 
-# HTML 输出模板
+## 附加资源
 
-将以下模板中的 {placeholder} 变量替换为实际内容后输出。
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>拜访准备框架 - {customer_name} - {date}</title>
-<style>
-  :root {
-    --fr-primary: #1A6FE8;
-    --fr-primary-light: #3A8DFF;
-    --fr-primary-dark: #0F4FB8;
-    --fr-bg-soft: #F5F7FA;
-    --fr-bg-tint: #E8EEF7;
-    --fr-border: #D4DEED;
-    --fr-text: #1F2937;
-    --fr-text-sub: #6B7280;
-    --fr-warn: #F59E0B;
-    --fr-danger: #EF4444;
-    --fr-success: #10B981;
-  }
-  body {
-    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-    color: var(--fr-text);
-    line-height: 1.7;
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 32px;
-    background: #fff;
-  }
-  .fr-header {
-    border-left: 4px solid var(--fr-primary);
-    padding: 8px 16px;
-    background: linear-gradient(90deg, var(--fr-bg-tint) 0%, #fff 100%);
-    margin-bottom: 24px;
-  }
-  .fr-header .title {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--fr-primary-dark);
-    margin: 0;
-  }
-  .fr-header .subtitle {
-    font-size: 13px;
-    color: var(--fr-text-sub);
-    margin-top: 4px;
-  }
-  .fr-section {
-    margin-bottom: 28px;
-  }
-  .fr-section-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--fr-primary);
-    border-bottom: 2px solid var(--fr-bg-tint);
-    padding-bottom: 6px;
-    margin-bottom: 14px;
-  }
-  .fr-section-title .num {
-    display: inline-block;
-    background: var(--fr-primary);
-    color: #fff;
-    width: 22px; height: 22px;
-    text-align: center; line-height: 22px;
-    border-radius: 50%;
-    font-size: 13px;
-    margin-right: 8px;
-  }
-  .fr-card {
-    background: var(--fr-bg-soft);
-    border-left: 3px solid var(--fr-primary-light);
-    padding: 12px 16px;
-    margin: 8px 0;
-    border-radius: 4px;
-  }
-  .fr-card .label {
-    font-size: 12px;
-    color: var(--fr-text-sub);
-    margin-bottom: 4px;
-  }
-  .fr-card .value {
-    font-size: 14px;
-    color: var(--fr-text);
-  }
-  .fr-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-  .fr-table th {
-    background: var(--fr-primary);
-    color: #fff;
-    padding: 8px 12px;
-    text-align: left;
-    font-weight: 500;
-  }
-  .fr-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--fr-border);
-  }
-  .fr-table tr:nth-child(even) td {
-    background: var(--fr-bg-soft);
-  }
-  .fr-tag {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 12px;
-    margin-right: 4px;
-  }
-  .fr-tag-high   { background: #FEE2E2; color: var(--fr-danger); }
-  .fr-tag-mid    { background: #FEF3C7; color: var(--fr-warn); }
-  .fr-tag-low    { background: #D1FAE5; color: var(--fr-success); }
-  .fr-tag-info   { background: var(--fr-bg-tint); color: var(--fr-primary-dark); }
-  .fr-quote {
-    border-left: 3px solid var(--fr-primary);
-    padding: 8px 14px;
-    background: var(--fr-bg-tint);
-    color: var(--fr-primary-dark);
-    margin: 8px 0;
-    font-style: italic;
-    font-size: 13px;
-  }
-  .fr-placeholder {
-    color: var(--fr-warn);
-    background: #FFF7E6;
-    padding: 2px 6px;
-    border-radius: 3px;
-    border: 1px dashed var(--fr-warn);
-    font-size: 12px;
-  }
-  .fr-footer {
-    margin-top: 40px;
-    padding-top: 16px;
-    border-top: 1px solid var(--fr-border);
-    font-size: 12px;
-    color: var(--fr-text-sub);
-    text-align: center;
-  }
-  .fr-footer .brand {
-    color: var(--fr-primary);
-    font-weight: 600;
-  }
-  ul.fr-list { padding-left: 20px; }
-  ul.fr-list li { margin-bottom: 6px; }
-</style>
-</head>
-<body>
-
-<div class="fr-header">
-  <div class="title">客户拜访准备框架</div>
-  <div class="subtitle">客户：{customer_name} ｜ 行业：{industry} ｜ 对接人：{contact_role} ｜ 目标领域：{target_domains}</div>
-</div>
-
-<div class="fr-section">
-  <div class="fr-section-title"><span class="num">01</span>客户业务画像速写</div>
-  {customer_profile_cards}
-</div>
-
-<div class="fr-section">
-  <div class="fr-section-title"><span class="num">02</span>核心业务假设</div>
-  {hypothesis_cards}
-</div>
-
-<div class="fr-section">
-  <div class="fr-section-title"><span class="num">03</span>必问核心信息清单</div>
-  <h4 style="color: var(--fr-primary);">业务现状</h4>
-  <ul class="fr-list">{business_status_questions}</ul>
-  <h4 style="color: var(--fr-primary);">数据现状</h4>
-  <ul class="fr-list">{data_status_questions}</ul>
-  <h4 style="color: var(--fr-primary);">痛点确认</h4>
-  <ul class="fr-list">{pain_point_questions}</ul>
-  <h4 style="color: var(--fr-primary);">决策推动</h4>
-  <ul class="fr-list">{decision_questions}</ul>
-</div>
-
-<div class="fr-section">
-  <div class="fr-section-title"><span class="num">04</span>钩子指标雷达</div>
-  <table class="fr-table">
-    <thead>
-      <tr>
-        <th>指标名</th>
-        <th>客户说什么词 = 命中</th>
-        <th>业务含义</th>
-        <th>引用条目</th>
-      </tr>
-    </thead>
-    <tbody>{hook_radar_rows}</tbody>
-  </table>
-</div>
-
-<div class="fr-section">
-  <div class="fr-section-title"><span class="num">05</span>临门一脚开放式问题</div>
-  {open_questions}
-</div>
-
-<div class="fr-section">
-  <div class="fr-section-title"><span class="num">06</span>风险预警</div>
-  {risk_warnings}
-</div>
-
-<div class="fr-footer">
-  本文档由 <span class="brand">帆软客户成功团队</span> · 拜访准备助手 生成<br>
-  生成时间：{timestamp} ｜ 模板版本：Skill-A v1.0 ｜ 文档编号：PRE-{customer_abbr}-{datecompact}
-</div>
-
-</body>
-</html>
-```
+- **场景表 schema**：[references/scene_table_schema.md](references/scene_table_schema.md)
+- **场景地图 schema**：[references/scene_map_schema.md](references/scene_map_schema.md)
+- **完整引导问题库**：[references/interview_questions.md](references/interview_questions.md)
+- **帆软产品分层判断**：[references/product_layers.md](references/product_layers.md)
+- **跨域破圈连接模式**：[references/cross_domain.md](references/cross_domain.md)
+- **HTML 输出模板**（可选渲染）：[assets/output_template.html](assets/output_template.html)
+- **端到端示例**：[examples/中建政研集团-示例输出.md](examples/中建政研集团-示例输出.md)

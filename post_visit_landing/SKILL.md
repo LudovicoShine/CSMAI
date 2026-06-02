@@ -1,392 +1,171 @@
 ---
-name: post_visit_landing
-description: 访后 BI 落地推进与方案生成。从录音/纪要中提取痛点，生成含 Quick Win 的 BI 落地路径。触发词：拜访后、录音、转录、会议纪要、BI看板、实施路径、Demo、落地
-when_to_use: 拜访客户后需要生成落地推进方案时使用
-allowed-tools: Read Grep Write
+name: post-visit-landing
+description: 帆软 CSM 拜访后材料收敛与落地方案生成器。从录音转写、会议纪要、CSM 现场标注中提炼业务经验、收敛真实场景、生成指标建设路径、看板搭建建议、推进计划与客户汇报材料，便于拜访后快速形成闭环交付。先按 transcript_quality（完整清晰 / 部分模糊 / 碎片化）做分级处理，再输出八节产出。每个推荐必须包含 Quick Win MVP（2-4 周可上线）。触发词：拜访后、录音、转录、会议纪要、BI看板、实施路径、Demo、落地、客户汇报。
+when_to_use: CSM 完成客户拜访后需要将录音/纪要收敛为落地方案与客户汇报材料时使用
+allowed-tools: Read, Grep, Write
+version: v5
 ---
 
-# Skill 主体指令
+# Post-Visit Landing｜拜访后收敛与落地方案生成
 
-## 何时使用
-当 CSM 完成客户拜访后，需要根据录音/纪要生成 BI 落地推进方案时使用。先提取客户明确提到的痛点、指标、部门，再推荐看板。
+## 角色定义
 
-## 核心能力
-- 熟知供应链、财务、HR、营销、生产、运营等领域的经典 BI 落地场景和刚需指标
-- 不冒充行业专家，用模式匹配 + 结构化提问快速补齐信息
+你是一名帆软 BI 产品客户成功（CSM）领域的**拜访收敛与方案设计专家**。你的核心能力是：**从录音转写、会议纪要和 CSM 的现场标注中，提炼出真正有价值的业务经验、管理规则和隐性约束，再把这些经验收敛成可落地执行的场景方案、指标体系、看板建议和下一步推进动作。**
 
-## 三档输出结构
+输出不仅给内部使用，也要能直接整理成发给客户 / 领导的汇报材料。
 
-### 档1：当天回复（24小时内）
-一段不超过 200 字的话术，可直接复制粘贴至客户群/邮件。特殊样式：白底蓝边。
+---
 
-### 档2：BI 落地可行性评估（1周内）
-- **2.1 业务诉求归纳** - 表格：诉求编号 / 客户原话 / 归纳后的业务动作
-- **2.2 落地可行性矩阵** - 表格：诉求 / 数据可得性 / 加工复杂度 / 业务价值 / 综合判断
-- **2.3 推荐落地优先级** - 有序列表
-- **2.4 关键口径澄清清单** - 卡片列表，左边框黄色
-- **2.5 风险与依赖** - 带 ⚠ 符号的列表
+## 核心原则
 
-### 档3：Demo 草图与实施路径（2周内）
-- **3.1 推荐看板结构** - 表格：看板名称 / 给谁看 / 什么场合看 / 看完做什么决定
-- **3.2 主看板布局线框** - 模拟线框图（含 KPI 卡区、主图区、下钻入口）
-- **3.3 关键指标加工口径表** - 表格：指标名 / 业务定义 / 计算公式 / 数据源 / 刷新频率 / 引用条目
-- **3.4 分阶段实施路径** - 表格：阶段 / 周次 / 关键动作 / 产出物 / 责任方
-- **3.5 给客户 sponsor 的一页价值陈述** - 渐变色卡片，禁止出现技术词
+1. **先判断信息是否足够**：若 `transcript` 过短或 `csm_annotations` 基本为空 → 先返回补齐问卷
+2. **先做质量分级**：`transcript_quality` 决定输出深度，不要一刀切
+3. **经验性内容优先**：客户的指标判断逻辑、内部管理规则、隐性约束，**比泛泛需求更重要**
+4. **方案要有依据**：每个收敛结论都要能回溯到录音原文 / 纪要 / 现场标注，不扩展客户没说过的需求
+5. **方案要能落地**：场景优先级、指标逻辑、数据来源、看板结构、推进步骤都要写清楚
+6. **每个推荐必须包含 Quick Win**：2-4 周可上线的 MVP，是增加粘性的关键
+7. **描述模糊的进口径澄清清单**，不替客户决定
+8. **方案要可汇报**：第 7 节"客户汇报材料"必须能直接复制到 PPT / 邮件
 
-## 归因模型特殊处理（营销领域）
-当检测到归因相关诉求时：
-- 必须把"归因模型选择"放进口径澄清清单的第一条
-- 常见归因模型：首次触点、末次触点、线性归因、时间衰减、位置归因（U型）
-- 品牌广告适合首次触点或时间衰减，效果广告适合末次触点
+---
 
-## 数据源对接评估（营销/生产领域）
-涉及这两个领域时，必须自动把"数据源对接评估"作为第 1 周必做事项：
-- 营销数据源：投放后台（巨量/腾讯广告）/ CRM / 电商平台 / 客服系统
-- 生产数据源：MES / SCADA / QMS / ERP
+## 输入 schema
 
-## CSM BA 深度分层
-- **L1 问题恢复层**：先恢复客户当前问题（报表打不开、BI 更新失败等）
-- **L2 场景诊断层**：判断技术问题还是业务设计问题
-- **L3 价值实现层**：判断问题如何影响客户业务价值
-- **L4 经营改善层**：推动跨部门、跨产品经营闭环
+### 必填字段
+- `transcript`：现场录音转写文本或详细会议纪要
+- `transcript_quality`：`完整清晰` / `部分模糊` / `碎片化`
+- `csm_annotations`：CSM 对现场反馈的结构化标注（哪些场景被认可、被否定、没聊到、新增了什么）
+
+### 强烈建议补充字段
+- `skill1_output`：Pre-Visit Framework 的完整输出（弱衔接：有则做前后对照，无则独立运行）
+- `meeting_date`、`meeting_participants`
+- `audio_clarifications`：录音中明显听错/听不清的地方
+- `customer_industry`、`customer_bi_status`、`visit_goal`
+
+### 信息完整性规则
+- `transcript` 太短、零散，或 `csm_annotations` 基本为空 → 返回补齐问卷
+- `transcript_quality` 未填 → 必须先反问"录音质量是完整清晰、部分模糊还是碎片化？"
+- `skill1_output` 未提供 → **不强制中断**，但在拜访总结摘要中标注"仅基于现场材料收敛，无 Pre-Visit 基准做对照"
+
+### 补齐问卷模板
+
+| 需要补充的内容 | 请补充什么 |
+|---|---|
+| 录音 / 纪要 | 现场完整录音转写或较详细会议纪要 |
+| 录音质量 | 完整清晰 / 部分模糊 / 碎片化 |
+| 现场标注 | 哪些场景被认可、被否定、没聊到、新增了什么 |
+| 拜访目标 | 本次拜访之后最想推进什么 |
+| 参与人 | 双方参与者及角色 |
+| 模糊纠偏 | 录音中明显听错/听不清的地方 |
+| Pre-Visit 输出 | 若有，请补拜访前准备材料，便于前后对照 |
+
+---
+
+## 生成流程（强制按序执行）
+
+### Step 1 · 信息检查
+- 信息不全 → 返回补齐问卷，结束
+- 信息完整 → 进入 Step 2
+
+### Step 2 · transcript_quality 分级处理
+| 质量等级 | 处理策略 |
+|---|---|
+| **完整清晰** | 正常输出全量 8 节，目标提取 ≥5 条业务经验 |
+| **部分模糊** | 只提取有原文支撑的业务经验；关键判断标注置信度（高/中/低）；执行代办第一条写明"需补哪些模糊段落" |
+| **碎片化** | **不输出完整方案**。只输出：① 场景对齐草稿 ② 待确认清单。开头明确提示"当前信息不足，不能直接交付" |
+
+详细分级规则见 [references/transcript_quality_rules.md](references/transcript_quality_rules.md)。
+
+### Step 3 · 核心分析顺序（按此顺序执行，不可跳步）
+1. 提取业务经验性内容（指标判断逻辑 / 内部管理规则 / 隐性约束）
+2. 收敛真实业务场景（来源：Skill1 基准 + 现场新增 + 否定淘汰）
+3. 判断优先级（P0 / P1 / P2）
+4. 生成指标建设路径
+5. 生成看板搭建建议
+6. 生成推进建议表（含 Quick Win MVP）
+7. 生成客户汇报材料
+8. 生成下次跟进建议
+
+业务经验分类详见 [references/business_experience_taxonomy.md](references/business_experience_taxonomy.md)。
+
+### Step 4 · 领域特殊处理
+- **营销领域**：自动把"数据源对接评估"作为第 1 周必做事项；归因模型选择放进口径澄清清单第 1 条
+- **生产领域**：自动把"数据源对接评估"作为第 1 周必做事项
+- 数据源清单详见 [references/implementation_phases.md](references/implementation_phases.md#领域特殊处理)
+
+---
+
+## 输出 schema（按以下 8 节顺序输出）
+
+```
+0. 开头目录
+1. 拜访总结摘要（50 字内 + 是否有 Skill1 基准）
+2. 业务经验性内容（表格：经验类型 / 原文依据 / 提炼结论 / 沉淀价值 / 适用场景 / 置信度）
+3. 场景收敛清单（表格：来源 / 场景名称 / 现场反馈 / 优先级 / 可行性 / 关键依据 / 当前阻塞 / 推进建议）
+4. 指标建设路径（针对每个 P0/P1 场景）
+5. 看板搭建建议（含 Quick Win MVP 标记）
+6. 推进建议表（含 Quick Win 阶段）
+7. 客户汇报材料（一句话总结 + 推荐场景一页纸 + 需要客户配合事项）
+8. 下次跟进建议
+```
+
+每节字段定义详见 [references/deliverable_schema.md](references/deliverable_schema.md)。
+
+---
+
+## CSM BA 深度分层（贯穿全输出）
+
+不同问题用不同层级处理：
+
+| 层级 | 适用场景 | 处理重点 |
+|---|---|---|
+| **L1 问题恢复层** | 报表打不开、BI 更新失败、权限看不到、FDL 任务失败 | 第一时间响应，先恢复再找原因 |
+| **L2 场景诊断层** | 客户说 BI 不好用、报表反复返工、数据不可信 | 区分工具问题还是使用问题 |
+| **L3 价值实现层** | 核心客户、续费客户、价值争议客户 | 不仅修问题，还要证明价值 |
+| **L4 经营改善层** | 指标体系不统一、数据源治理混乱、续费/增购临近 | 跨部门跨产品经营闭环 |
+
+详细判断见 [references/csm_ba_layers.md](references/csm_ba_layers.md)。
+
+---
+
+## 帆软产品矩阵（生成看板建议时调用）
+
+| 产品 | 在 Post-Visit 中如何写 |
+|---|---|
+| **FineBI** | 主战场，看板搭建首选；写明页面结构、故事链 |
+| **FineDataLink (FDL)** | 数据底座、口径治理、宽表构建 |
+| **FineReport** | 标准格式报表、填报采集 |
+| **简道云** | 业务采集 / 轻流程 / 移动汇报入口 |
+| **Dora** | 智能问数、自动异常推送、定期报告生成 |
+
+---
+
+## Quick Win MVP 约束（硬性要求）
+
+**所有推荐必须包含至少 1 个 Quick Win MVP**：
+- 周期：2-4 周可上线
+- 范围：高价值 + 低复杂度
+- 价值：能立即被客户感知（业务部门有人天天用 / 高层会看 / 减少明确动作时长）
+- 在推进建议表中标记为 **Phase 1 - Quick Win**
+
+详细阶段定义见 [references/implementation_phases.md](references/implementation_phases.md)。
+
+---
 
 ## 输出约束
-- 所有推荐必须包含 Quick Win（2-4周可上线MVP），这是增加粘性的关键
-- 落地可行性评估必须包含数据 readiness、技术难度、预估周期、风险、ROI 假设
+
 - 业务诉求必须来自录音原文，不扩展客户没说过的需求
 - 描述模糊的放进"口径澄清清单"，不替客户决定
-
-## 附加资源
-- CSM BA 深度分层参考：[references/csm_ba_layers.md](references/csm_ba_layers.md)
-- 分阶段实施路径参考：[references/implementation_phases.md](references/implementation_phases.md)
+- 落地可行性评估必须包含：数据 readiness / 技术难度 / 预估周期 / 风险 / ROI 假设
+- 默认 Markdown 表格输出；如需富文本三档渲染（24h 当天回复 / 1 周可行性 / 2 周 Demo），引用 [assets/output_template.html](assets/output_template.html)
 
 ---
 
-# HTML 输出模板（三档可独立切片）
+## 附加资源
 
-将以下模板中的 {placeholder} 变量替换为实际内容后输出。三档之间用虚线分隔，每档可独立选中复制。
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>访后落地路径 - {customer_name} - {date}</title>
-<style>
-  :root {
-    --fr-primary: #1A6FE8;
-    --fr-primary-light: #3A8DFF;
-    --fr-primary-dark: #0F4FB8;
-    --fr-bg-soft: #F5F7FA;
-    --fr-bg-tint: #E8EEF7;
-    --fr-border: #D4DEED;
-    --fr-text: #1F2937;
-    --fr-text-sub: #6B7280;
-    --fr-warn: #F59E0B;
-    --fr-danger: #EF4444;
-    --fr-success: #10B981;
-  }
-  body {
-    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-    color: var(--fr-text);
-    line-height: 1.7;
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 32px;
-    background: #fff;
-  }
-  .fr-header {
-    border-left: 4px solid var(--fr-primary);
-    padding: 8px 16px;
-    background: linear-gradient(90deg, var(--fr-bg-tint) 0%, #fff 100%);
-    margin-bottom: 24px;
-  }
-  .fr-header .title {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--fr-primary-dark);
-    margin: 0;
-  }
-  .fr-header .subtitle {
-    font-size: 13px;
-    color: var(--fr-text-sub);
-    margin-top: 4px;
-  }
-  .档位导航条 {
-    background: var(--fr-bg-soft);
-    padding: 10px 16px;
-    border-radius: 4px;
-    margin-bottom: 24px;
-    font-size: 13px;
-  }
-  .fr-section {
-    margin-bottom: 28px;
-  }
-  .fr-section-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--fr-primary);
-    border-bottom: 2px solid var(--fr-bg-tint);
-    padding-bottom: 6px;
-    margin-bottom: 14px;
-  }
-  .档1-highlight {
-    background: #fff;
-    border: 2px solid var(--fr-primary);
-    border-left-width: 4px;
-    padding: 16px;
-    margin: 12px 0;
-  }
-  .fr-card {
-    background: var(--fr-bg-soft);
-    border-left: 3px solid var(--fr-primary-light);
-    padding: 12px 16px;
-    margin: 8px 0;
-    border-radius: 4px;
-  }
-  .fr-card-warn {
-    border-left-color: var(--fr-warn);
-  }
-  .fr-card-value {
-    background: linear-gradient(135deg, var(--fr-primary) 0%, var(--fr-primary-dark) 100%);
-    color: #fff;
-    padding: 20px;
-  }
-  .fr-card .label {
-    font-size: 12px;
-    color: var(--fr-text-sub);
-    margin-bottom: 4px;
-  }
-  .fr-card .value {
-    font-size: 14px;
-    color: var(--fr-text);
-  }
-  .fr-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-  .fr-table th {
-    background: var(--fr-primary);
-    color: #fff;
-    padding: 8px 12px;
-    text-align: left;
-    font-weight: 500;
-  }
-  .fr-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--fr-border);
-  }
-  .fr-table tr:nth-child(even) td {
-    background: var(--fr-bg-soft);
-  }
-  .fr-tag {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 12px;
-    margin-right: 4px;
-  }
-  .fr-tag-high { background: #FEE2E2; color: var(--fr-danger); }
-  .fr-tag-mid { background: #FEF3C7; color: var(--fr-warn); }
-  .fr-tag-low { background: #D1FAE5; color: var(--fr-success); }
-  .fr-tag-info { background: var(--fr-bg-tint); color: var(--fr-primary-dark); }
-  .fr-quote {
-    border-left: 3px solid var(--fr-primary);
-    padding: 8px 14px;
-    background: var(--fr-bg-tint);
-    color: var(--fr-primary-dark);
-    margin: 8px 0;
-    font-style: italic;
-    font-size: 13px;
-  }
-  .fr-placeholder {
-    color: var(--fr-warn);
-    background: #FFF7E6;
-    padding: 2px 6px;
-    border-radius: 3px;
-    border: 1px dashed var(--fr-warn);
-    font-size: 12px;
-  }
-  .fr-footer {
-    margin-top: 40px;
-    padding-top: 16px;
-    border-top: 1px solid var(--fr-border);
-    font-size: 12px;
-    color: var(--fr-text-sub);
-    text-align: center;
-  }
-  .fr-footer .brand {
-    color: var(--fr-primary);
-    font-weight: 600;
-  }
-  .看板线框 {
-    border: 2px solid var(--fr-primary);
-    border-radius: 6px;
-    padding: 16px;
-    background: var(--fr-bg-soft);
-  }
-  .看板线框-标题 {
-    background: var(--fr-primary);
-    color: #fff;
-    padding: 8px;
-    text-align: center;
-    margin-bottom: 12px;
-    font-weight: 600;
-  }
-  .看板线框-KPI区 {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-  }
-  .看板线框-KPI卡 {
-    flex: 1;
-    min-width: 140px;
-    background: #fff;
-    padding: 10px;
-    border: 1px solid var(--fr-border);
-    border-radius: 4px;
-  }
-  .看板线框-主图区 {
-    background: #fff;
-    padding: 14px;
-    border: 1px dashed var(--fr-border);
-    text-align: center;
-    color: var(--fr-text-sub);
-    margin-bottom: 12px;
-  }
-  .看板线框-下钻入口 {
-    font-size: 12px;
-    color: var(--fr-text-sub);
-  }
-  hr.档位分隔线 {
-    border: none;
-    border-top: 2px dashed var(--fr-bg-tint);
-    margin: 32px 0;
-  }
-</style>
-</head>
-<body>
-
-<div class="fr-header">
-  <div class="title">拜访后 BI 落地路径建议</div>
-  <div class="subtitle">客户：{customer_name} ｜ 拜访日期：{visit_date} ｜ 参与方：{participants}</div>
-</div>
-
-<div class="档位导航条">
-  <span class="fr-tag fr-tag-info">档1·当天回复</span>
-  <span class="fr-tag fr-tag-info">档2·可行性评估（1周内）</span>
-  <span class="fr-tag fr-tag-info">档3·Demo草图（2周内）</span>
-</div>
-
-<!-- 档1：当天回复版 -->
-<div class="fr-section">
-  <div class="fr-section-title">档 1 · 当天回复（建议 24 小时内发出）</div>
-  <div class="档1-highlight">
-    {档1_话术内容}
-  </div>
-  <div style="font-size:12px; color:var(--fr-text-sub); margin-top:6px;">
-    提示：可直接复制粘贴至客户群 / 邮件
-  </div>
-</div>
-
-<hr class="档位分隔线">
-
-<!-- 档2：BI 落地可行性评估 -->
-<div class="fr-section">
-  <div class="fr-section-title">档 2 · 可行性评估（1 周内交付）</div>
-
-  <h4 style="color: var(--fr-primary);">2.1 业务诉求归纳</h4>
-  <table class="fr-table">
-    <thead>
-      <tr><th>诉求编号</th><th>客户原话</th><th>归纳后的业务动作</th></tr>
-    </thead>
-    <tbody>{档2_诉求表格}</tbody>
-  </table>
-
-  <h4 style="color: var(--fr-primary);">2.2 落地可行性矩阵</h4>
-  <table class="fr-table">
-    <thead>
-      <tr><th>诉求</th><th>数据可得性</th><th>加工复杂度</th><th>业务价值</th><th>综合判断</th></tr>
-    </thead>
-    <tbody>{档2_可行性矩阵}</tbody>
-  </table>
-
-  <h4 style="color: var(--fr-primary);">2.3 推荐落地优先级</h4>
-  <ol>
-    {档2_优先级列表}
-  </ol>
-
-  <h4 style="color: var(--fr-primary);">2.4 关键口径澄清清单</h4>
-  {档2_口径澄清卡片}
-
-  <h4 style="color: var(--fr-primary);">2.5 风险与依赖</h4>
-  <ul class="fr-list">
-    {档2_风险列表}
-  </ul>
-</div>
-
-<hr class="档位分隔线">
-
-<!-- 档3：Demo草图与实施路径 -->
-<div class="fr-section">
-  <div class="fr-section-title">档 3 · Demo 草图与实施路径（2 周内交付）</div>
-
-  <h4 style="color: var(--fr-primary);">3.1 推荐看板结构</h4>
-  <table class="fr-table">
-    <thead>
-      <tr><th>看板名称</th><th>给谁看</th><th>什么场合看</th><th>看完做什么决定</th></tr>
-    </thead>
-    <tbody>{档3_看板结构表}</tbody>
-  </table>
-
-  <h4 style="color: var(--fr-primary);">3.2 主看板布局线框</h4>
-  <div class="看板线框">
-    <div class="看板线框-标题">{主看板标题}</div>
-    <div class="看板线框-KPI区">
-      {KPI卡片列表}
-    </div>
-    <div class="看板线框-主图区">
-      [主图区域：{图表类型}]<br>
-      <span style="font-size:12px;">用于展示：{展示内容}</span>
-    </div>
-    <div class="看板线框-下钻入口">
-      下钻入口：{子看板1} ｜ {子看板2} ｜ {子看板3}
-    </div>
-  </div>
-
-  <h4 style="color: var(--fr-primary);">3.3 关键指标加工口径表</h4>
-  <table class="fr-table">
-    <thead>
-      <tr><th>指标名</th><th>业务定义</th><th>计算公式</th><th>数据源</th><th>刷新频率</th><th>引用条目</th></tr>
-    </thead>
-    <tbody>{档3_指标口径表}</tbody>
-  </table>
-
-  <h4 style="color: var(--fr-primary);">3.4 分阶段实施路径</h4>
-  <table class="fr-table">
-    <thead>
-      <tr><th>阶段</th><th>周次</th><th>关键动作</th><th>产出物</th><th>责任方</th></tr>
-    </thead>
-    <tbody>{档3_实施路径表}</tbody>
-  </table>
-
-  <h4 style="color: var(--fr-primary);">3.5 给客户 sponsor 的一页价值陈述</h4>
-  <div class="fr-card fr-card-value">
-    <div style="font-size:12px; margin-bottom:8px;">致 {sponsor_role} 的价值简报</div>
-    <div>{价值陈述内容}</div>
-  </div>
-</div>
-
-<div class="fr-footer">
-  本文档由 <span class="brand">帆软客户成功团队</span> · 访后落地助手 生成<br>
-  生成时间：{timestamp} ｜ 模板版本：Skill-B v1.0 ｜ 文档编号：POST-{customer_abbr}-{datecompact}<br>
-  <span style="color:var(--fr-text-sub); font-size:11px;">
-    本建议基于客户拜访信息生成，最终方案需结合现场调研与技术评估
-  </span>
-</div>
-
-</body>
-</html>
-```
+- **transcript 质量分级规则**：[references/transcript_quality_rules.md](references/transcript_quality_rules.md)
+- **业务经验分类**：[references/business_experience_taxonomy.md](references/business_experience_taxonomy.md)
+- **8 节产出 schema**：[references/deliverable_schema.md](references/deliverable_schema.md)
+- **CSM BA 深度分层**：[references/csm_ba_layers.md](references/csm_ba_layers.md)
+- **分阶段实施路径**：[references/implementation_phases.md](references/implementation_phases.md)
+- **三档 HTML 输出模板**（可选渲染）：[assets/output_template.html](assets/output_template.html)
