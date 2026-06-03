@@ -4,7 +4,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional, Tuple
 
 
 FUZZY_PATTERNS = [
@@ -24,7 +24,7 @@ def read_text(path_str: Optional[str]) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def count_fuzzy_markers(text: str) -> tuple[int, dict[str, int]]:
+def count_fuzzy_markers(text: str) -> Tuple[int, Dict[str, int]]:
     detail = {}
     total = 0
     for pattern in FUZZY_PATTERNS:
@@ -62,7 +62,7 @@ def build_notes(
     inferred_quality: str,
     has_annotations: bool,
     manual_override: Optional[str],
-) -> list[str]:
+) -> List[str]:
     notes = []
     if not has_annotations:
         notes.append("未提供 csm_annotations，建议人工补充现场认可/否定/新增场景。")

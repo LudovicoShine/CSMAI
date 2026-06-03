@@ -20,12 +20,29 @@
 ## 用法
 
 ```bash
-python scripts/prepare_post_visit.py \
+python SCRIPTS/prepare_post_visit.py \
   --transcript-file path/to/transcript.txt \
   --annotations-file path/to/annotations.md \
   --skill1-output-file path/to/pre_visit.md \
   --meeting-date 2026-06-02 \
   --customer-industry "政策研究咨询"
+```
+
+在公司平台目录中使用大写脚本目录时：
+
+```bash
+python SCRIPTS/prepare_post_visit.py \
+  --transcript-file path/to/transcript.txt \
+  --annotations-file path/to/annotations.md
+```
+
+追加使用反馈：
+
+```bash
+python SCRIPTS/append_feedback.py \
+  --issue "输出漏掉客户配合事项" \
+  --impact "客户版简报无法直接发出" \
+  --suggestion "强化第 7 节客户配合事项检查"
 ```
 
 ## 支持参数
